@@ -163,22 +163,3 @@ print(f"  Accuracy : {best['acc']:.4f}  |  F1-weighted: {best['f1_w']:.4f}"
 print(f"  CV(5-fold): {best['cv_str']}")
 print("=" * 60)
 print(classification_report(y_test, best['y_pred'], target_names=le.classes_))
-
-# ─────────────────────────────────────────────
-# 9. 특성 중요도 (Random Forest / XGBoost)
-# ─────────────────────────────────────────────
-fi_model_name = 'XGBoost' if 'XGBoost' in models else 'Random Forest'
-fi_model = models[fi_model_name]
-if hasattr(fi_model, 'feature_importances_'):
-    importances = fi_model.feature_importances_
-    col_names = [df.columns[i] for i in all_selected_col_positions]
-    fi_df = pd.DataFrame({
-        'trait':      [t for t, idxs in selected_indices.items() for _ in idxs],
-        'question':   col_names,
-        'importance': importances,
-    }).sort_values('importance', ascending=False)
-
-    print(f"\n[{fi_model_name}] 특성 중요도 Top 10")
-    print("-" * 60)
-    for _, row in fi_df.head(10).iterrows():
-        print(f"  [{row['trait']}] {row['importance']:.4f}  {row['question'][:45]}")
