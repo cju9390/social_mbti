@@ -4,8 +4,11 @@ MBTI 예측 + 각 성향 축 퍼센트 출력
 - E/I · N/S · T/F · J/P 각 축 확률 계산
 """
 
+import sys
 import numpy as np
 import joblib
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 # ─────────────────────────────────────────────
 # 1. 모델 로드
@@ -14,6 +17,8 @@ data = joblib.load('svm_model.pkl')
 svm        = data['model']
 le         = data['label_encoder']
 col_names  = data['selected_col_names']
+
+
 
 # ─────────────────────────────────────────────
 # 2. 인터리브 순서 → 모델 피처 순서 매핑
@@ -38,6 +43,9 @@ AXIS_GROUPS = {
     'J': [i for i, c in enumerate(le.classes_) if c[3] == 'J'],
     'P': [i for i, c in enumerate(le.classes_) if c[3] == 'P'],
 }
+
+
+
 
 # ─────────────────────────────────────────────
 # 3. 예측 함수
@@ -94,16 +102,44 @@ def print_result(result: dict):
 
 
 def get_social_abilities() -> list[dict]:
-    """MBTI 조합 기반 사회적 능력치 목록 반환
-    """
+    """MBTI 조합 기반 사회적 능력치 목록 반환"""
     return [
-        {"title": "현실 판단력",   "formula": "S (감각) + T (사고)"},   # 상황을 빠르게 읽고 논리적으로 대처하는 능력
-        {"title": "깊은 공감력",   "formula": "N (직관) + I (내향)"},   # 상대의 감정을 직관적으로 이해하는 능력
-        {"title": "관계 신뢰도",   "formula": "F (감정) + J (판단)"},   # 진심 어린 배려로 신뢰를 쌓는 능력
-        {"title": "사교적 유연성", "formula": "P (인식) + E (외향)"},   # 다양한 사람과 자유롭게 어울리는 능력
-        {"title": "카리스마",      "formula": "N (직관) + E (외향)"},   # 영감을 주고 사람을 끌어당기는 능력
-        {"title": "세심한 배려",   "formula": "S (감각) + J (판단)"},   # 디테일을 포착해 꼼꼼하게 챙기는 능력
+        {"title": "통찰력",        "traits": ("S", "T"), "formula": "S (감각) + T (사고)"},
+        {"title": "감수성",        "traits": ("N", "I"), "formula": "N (직관) + I (내향)"},
+        {"title": "유대감",        "traits": ("F", "J"), "formula": "F (감정) + J (판단)"},
+        {"title": "친화력",        "traits": ("P", "E"), "formula": "P (인식) + E (외향)"},
+        {"title": "열정",          "traits": ("N", "E"), "formula": "N (직관) + E (외향)"},
+        {"title": "책임감",        "traits": ("S", "J"), "formula": "S (감각) + J (판단)"},
     ]
+
+
+def calc_social_scores(result: dict) -> list[dict]:
+    """예측 결과로 사회적 능력치 점수(1~10) 계산"""
+    axis_pct = result['axis_pct']
+    scores = []
+    for ability in get_social_abilities():
+        t1, t2 = ability['traits']
+        score = round((axis_pct[t1] + axis_pct[t2]) / 20, 1)  # 0~100 두 값 평균 → 1~10
+        score = max(1.0, min(10.0, score))
+        scores.append({"title": ability['title'], "formula": ability['formula'], "score": score})
+    return scores
+
+
+def print_social_scores(result: dict):
+    """사회적 능력치 점수를 바 차트로 출력"""
+    scores = calc_social_scores(result)
+    print("\n" + "=" * 45)
+    print("  사회적 능력치 (1~10)")
+    print("=" * 45)
+    for item in scores:
+        bar_len = 20
+        filled  = round(item['score'] / 10 * bar_len)
+        bar     = '█' * filled + '░' * (bar_len - filled)
+        print(f"  {item['title']:<8}  [{bar}]  {item['score']:4.1f}")
+
+
+
+
 
 
 # ─────────────────────────────────────────────
@@ -130,6 +166,7 @@ if __name__ == '__main__':
     ]
     result1 = predict_mbti(answers_enfp)
     print_result(result1)
+    print_social_scores(result1)
 
     # 예시 2: 내향적/감각적/사고적/판단형 성향 응답
     print("\n[예시 2] 내향·감각·사고·판단 성향")
@@ -147,6 +184,7 @@ if __name__ == '__main__':
     ]
     result2 = predict_mbti(answers_istj)
     print_result(result2)
+    print_social_scores(result2)
 
     # 예시 3: 랜덤 응답
     print("\n[예시 3] 랜덤 응답")
@@ -154,3 +192,4 @@ if __name__ == '__main__':
     answers_random = np.random.randint(-3, 4, size=20).tolist()
     result3 = predict_mbti(answers_random)
     print_result(result3)
+    print_social_scores(result3)
