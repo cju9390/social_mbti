@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MBTI 테스트</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f0f2f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 44px 40px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.09);
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+    .fade-in { animation: fadeUp .28s ease both; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+
+    /* ── 공통 버튼 ── */
+    .btn-primary {
+      background: #5c6ef8;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 32px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-primary:hover { background: #4a5ce6; }
+    .btn-primary:disabled { background: #c0c8f8; cursor: default; }
+
+    .btn-ghost {
+      background: none;
+      border: 2px solid #e0e3f0;
+      border-radius: 10px;
+      padding: 10px 22px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #888;
+      cursor: pointer;
+    }
+    .btn-ghost:hover { border-color: #aaa; color: #555; }
+    .btn-ghost:disabled { opacity: .3; cursor: default; }
+
+    /* ══════════════════════════════
+       1. 이름 입력 화면
+    ══════════════════════════════ */
+    #name-view {
+      text-align: center;
+    }
+    .name-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: #1a1a2e;
+      margin-bottom: 8px;
+    }
+    .name-sub {
+      font-size: 15px;
+      color: #999;
+      margin-bottom: 40px;
+    }
+    .name-input {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 18px;
+      border: 2px solid #e0e3f0;
+      border-radius: 14px;
+      outline: none;
+      text-align: center;
+      transition: border-color .15s;
+      margin-bottom: 24px;
+    }
+    .name-input:focus { border-color: #5c6ef8; }
+
+    /* ══════════════════════════════
+       2. 퀴즈 화면
+    ══════════════════════════════ */
+    .progress-wrap { margin-bottom: 32px; }
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #aaa;
+      margin-bottom: 8px;
+    }
+    .progress-bar {
+      height: 5px;
+      background: #eef0f8;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #5c6ef8;
+      border-radius: 99px;
+      transition: width .35s ease;
+    }
+
+    .q-text {
+      font-size: 19px;
+      font-weight: 600;
+      color: #1a1a2e;
+      line-height: 1.65;
+      min-height: 88px;
+      margin-bottom: 40px;
+    }
+
+    /* 동그라미 버튼 */
+    .circles-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 12px;
+    }
+    .circles-line {
+      position: absolute;
+      top: 50%;
+      left: 7%;
+      right: 7%;
+      height: 2px;
+      background: #eef0f8;
+      transform: translateY(-50%);
+      z-index: 0;
+    }
+    .circle-btn {
+      position: relative;
+      z-index: 1;
+      border-radius: 50%;
+      border: 2.5px solid;
+      cursor: pointer;
+      background: #fff;
+      transition: transform .13s, background .13s, box-shadow .13s;
+      flex-shrink: 0;
+    }
+    .circle-btn:hover {
+      transform: scale(1.18);
+    }
+    .circle-btn.selected {
+      box-shadow: 0 0 0 4px rgba(92,110,248,.18);
+    }
+
+    .circles-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #bbb;
+      padding: 0 6px;
+      margin-bottom: 36px;
+    }
+
+    .quiz-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* ══════════════════════════════
+       3. 결과 화면
+    ══════════════════════════════ */
+    .result-name {
+      font-size: 14px;
+      color: #aaa;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .mbti-badge {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .mbti-type {
+      font-size: 62px;
+      font-weight: 900;
+      color: #5c6ef8;
+      letter-spacing: 7px;
+      line-height: 1;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #bbb;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .axis-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 13px;
+    }
+    .axis-letter {
+      width: 20px;
+      font-weight: 700;
+      font-size: 14px;
+      text-align: center;
+    }
+    .axis-track {
+      flex: 1;
+      height: 9px;
+      background: #eef0f8;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .axis-fill {
+      height: 100%;
+      border-radius: 99px;
+    }
+    .axis-pct {
+      width: 38px;
+      font-size: 12px;
+      color: #999;
+      text-align: right;
+    }
+
+
+    .result-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+    }
+    .result-actions .btn-primary { flex: 1; }
+    .result-actions .btn-secondary {
+      flex: 1;
+      background: #f0f2ff;
+      color: #5c6ef8;
+      border: 2px solid #c0c8f8;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .result-actions .btn-secondary:hover { background: #e4e7ff; }
+
+    .btn-purpose-main {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #f59e0b, #fb923c);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn-purpose-main:hover { opacity: .88; }
+
+    /* ══════════════════════════════
+       6. 목적별 추천 화면
+    ══════════════════════════════ */
+    .purpose-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    .purpose-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      background: #fff;
+      border: 2px solid #eef0f8;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .purpose-card:hover { border-color: #a0aaf8; box-shadow: 0 2px 10px rgba(92,110,248,.12); }
+    .purpose-card.selected { border-color: #5c6ef8; background: #f4f5ff; }
+    .purpose-icon { font-size: 26px; line-height: 1; }
+    .purpose-info { flex: 1; }
+    .purpose-name { font-size: 15px; font-weight: 700; color: #222; }
+    .purpose-desc { font-size: 12px; color: #888; margin-top: 2px; }
+    .purpose-tags { display: flex; gap: 6px; margin-top: 6px; }
+    .purpose-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      color: #fff;
+    }
+    .purpose-arrow { font-size: 18px; color: #bbb; transition: color .15s; }
+    .purpose-card.selected .purpose-arrow { color: #5c6ef8; }
+
+    .purpose-result { margin-top: 4px; }
+    .purpose-result-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #555;
+      margin-bottom: 10px;
+      padding-left: 2px;
+    }
+    .purpose-cand-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      background: #fff;
+      border: 2px solid #eef0f8;
+      border-radius: 12px;
+      margin-bottom: 8px;
+    }
+    .purpose-cand-rank {
+      font-size: 20px;
+      font-weight: 900;
+      color: #c0c8f8;
+      width: 28px;
+      text-align: center;
+    }
+    .purpose-cand-rank.top { color: #5c6ef8; }
+    .purpose-cand-info { flex: 1; }
+    .purpose-cand-name { font-size: 14px; font-weight: 700; color: #222; }
+    .purpose-cand-mbti { font-size: 12px; font-weight: 700; color: #888; margin-top: 1px; }
+    .purpose-cand-bars { flex: 2; }
+    .purpose-cand-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 5px;
+    }
+    .purpose-cand-bar-lbl { font-size: 11px; font-weight: 700; color: #666; width: 36px; }
+    .purpose-cand-bar-track {
+      flex: 1;
+      height: 8px;
+      background: #eef0f8;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .purpose-cand-bar-fill { height: 100%; border-radius: 99px; }
+
+    /* ══════════════════════════════
+       5. 성향 비교 화면
+    ══════════════════════════════ */
+    .compare-section { margin-bottom: 28px; }
+    .compare-section-title {
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      letter-spacing: .5px;
+    }
+    .compare-section-title.similar {
+      color: #fff;
+      background: #5c6ef8;
+    }
+    .compare-section-title.opposite {
+      color: #fff;
+      background: #f06040;
+    }
+    .compare-person {
+      padding: 14px 16px;
+      border: 2px solid #eef0f8;
+      border-radius: 14px;
+      margin-bottom: 12px;
+    }
+    .compare-person.similar-card { border-color: #c0c8f8; background: #f8f9ff; }
+    .compare-person.opposite-card { border-color: #f8c0b0; background: #fff8f6; }
+    .compare-person-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .compare-person-name { font-size: 15px; font-weight: 700; color: #222; }
+    .compare-person-mbti { font-size: 14px; font-weight: 800; color: #5c6ef8; }
+    .compare-person-mbti.opp { color: #f06040; }
+    .compare-score-badge {
+      font-size: 13px;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 99px;
+      white-space: nowrap;
+    }
+    .compare-score-badge.sim { background: #5c6ef8; color: #fff; }
+    .compare-score-badge.opp { background: #f06040; color: #fff; }
+    .compare-axis-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .compare-axis-lbl { width: 28px; font-size: 12px; font-weight: 700; color: #555; }
+    .compare-axis-track {
+      flex: 1;
+      height: 10px;
+      background: #e4e8f0;
+      border-radius: 99px;
+      overflow: hidden;
+      position: relative;
+    }
+    .compare-axis-me {
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%;
+      border-radius: 99px;
+      background: rgba(92,110,248,0.5);
+    }
+    .compare-axis-them {
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%;
+      border-radius: 99px;
+    }
+    .compare-axis-pct {
+      width: 72px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    /* ══════════════════════════════
+       4. 팀 추천 화면
+    ══════════════════════════════ */
+    .team-header { margin-bottom: 28px; }
+    .team-title { font-size: 22px; font-weight: 800; color: #1a1a2e; }
+    .team-sub { font-size: 14px; color: #aaa; margin-top: 4px; }
+
+    .team-card {
+      border: 2px solid #eef0f8;
+      border-radius: 16px;
+      padding: 20px 22px;
+      margin-bottom: 16px;
+    }
+    .team-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .team-rank {
+      font-size: 13px;
+      font-weight: 700;
+      color: #5c6ef8;
+      background: #f0f2ff;
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+    .team-stats {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    .team-members {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .member-chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: #f6f7ff;
+      border-radius: 99px;
+      padding: 6px 14px;
+      font-size: 14px;
+    }
+    .member-chip.seed {
+      background: #eef0ff;
+      border: 1.5px solid #c0c8f8;
+    }
+    .member-name { font-weight: 600; color: #333; }
+    .member-mbti { font-size: 12px; color: #5c6ef8; font-weight: 700; }
+
+    .avg-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .avg-name { width: 46px; font-size: 12px; color: #888; }
+    .avg-track {
+      flex: 1;
+      height: 7px;
+      background: #eef0f8;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .avg-fill {
+      height: 100%;
+      background: #5c6ef8;
+      border-radius: 99px;
+    }
+    .avg-val { width: 30px; font-size: 11px; color: #aaa; text-align: right; }
+
+    .team-back {
+      margin-top: 8px;
+    }
+
+    /* ── 파티 빌더 ── */
+    .party-slots {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .party-slot {
+      flex: 1;
+      min-width: 90px;
+      border: 2px dashed #d0d4f0;
+      border-radius: 14px;
+      padding: 12px 8px;
+      text-align: center;
+      font-size: 12px;
+      color: #ccc;
+      transition: border-color .15s, background .15s;
+    }
+    .party-slot.filled {
+      border: 2px solid #5c6ef8;
+      background: #eef0ff;
+      cursor: pointer;
+    }
+    .party-slot.filled:hover { background: #e0e4ff; }
+    .party-slot .slot-name { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 3px; }
+    .party-slot .slot-mbti { font-size: 12px; font-weight: 700; color: #5c6ef8; }
+    .party-slot .slot-remove { font-size: 11px; color: #aaa; margin-top: 4px; }
+
+.candidate-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      max-height: 260px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      padding-right: 2px;
+    }
+    .candidate-card {
+      border: 2px solid #eef0f8;
+      border-radius: 12px;
+      padding: 12px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .15s, background .15s, transform .12s;
+    }
+    .candidate-card:hover { border-color: #a0aeff; background: #f8f9ff; transform: translateY(-2px); }
+    .candidate-card.selected { border-color: #5c6ef8; background: #eef0ff; }
+    .candidate-card.ai-pick { border-color: #a0aeff; }
+    .candidate-card .c-name { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 4px; }
+    .candidate-card .c-mbti { font-size: 12px; font-weight: 700; color: #5c6ef8; }
+    .candidate-card .c-ai   { font-size: 10px; color: #a0aeff; margin-top: 3px; }
+
+    .loading-msg {
+      text-align: center;
+      padding: 48px 0;
+      color: #aaa;
+      font-size: 15px;
+    }
+    .error-msg {
+      text-align: center;
+      padding: 32px 0;
+      color: #f87070;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <!-- 1. 이름 입력 -->
+  <div id="name-view" class="view active fade-in">
+    <div class="name-title">MBTI 테스트</div>
+    <div class="name-sub">시작 전에 이름을 입력해 주세요</div>
+    <input class="name-input" id="name-input" type="text" placeholder="이름 입력" maxlength="20"
+           oninput="onNameInput()" onkeydown="if(event.key==='Enter') startQuiz()"/>
+    <button class="btn-primary" id="btn-start" style="width:100%" onclick="startQuiz()" disabled>시작하기</button>
+  </div>
+
+  <!-- 2. 퀴즈 -->
+  <div id="quiz-view" class="view">
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span id="q-counter">1 / 20</span>
+        <span id="q-pct-label">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="q-text fade-in" id="q-text"></div>
+
+    <div class="circles-wrap" id="circles-wrap">
+      <div class="circles-line"></div>
+      <!-- JS로 생성 -->
+    </div>
+    <div class="circles-labels">
+      <span>전혀 아니다</span>
+      <span>매우 그렇다</span>
+    </div>
+
+    <div class="quiz-nav">
+      <button class="btn-ghost" id="btn-back" onclick="goBack()" disabled>← 이전</button>
+      <button class="btn-primary" id="btn-result" style="display:none" onclick="submitQuiz()">결과보기 →</button>
+    </div>
+  </div>
+
+  <!-- 3. 결과 -->
+  <div id="result-view" class="view">
+    <div id="result-content"></div>
+  </div>
+
+  <!-- 4. 팀 추천 -->
+  <div id="team-view" class="view">
+    <div id="team-content"></div>
+  </div>
+
+  <!-- 5. 성향 비교 -->
+  <div id="compare-view" class="view">
+    <div id="compare-content"></div>
+  </div>
+
+  <!-- 6. 목적별 추천 -->
+  <div id="purpose-view" class="view">
+    <div id="purpose-content"></div>
+  </div>
+
+</div>
+
+<script>
+  const QUESTIONS = {{ questions | tojson }};
+  const TOTAL = QUESTIONS.length;
+
+  // 상태
+  let userName = '';
+  let answers  = new Array(TOTAL).fill(null);
+  let current  = 0;
+  let lastResult = null; // {mbti, axis_pct, social_scores}
+
+  // ── 동그라미 설정 ──
+  // 값: -3 -2 -1  0  1  2  3
+  const SIZES  = [72, 56, 42, 28, 42, 56, 72];
+  const VALS   = [-3, -2, -1,  0,  1,  2,  3];
+  const COLORS = ['#5c6ef8','#7c8ef9','#a0aeff','#c0c0c0','#ffaa88','#f8855c','#f06040'];
+  const GAPS   = [0, 48, 36, 28, 28, 36, 48]; // 버튼 간격
+
+  // 축 색상
+  const AXIS_COLORS = {
+    E:'#5c6ef8', I:'#a0aeff',
+    N:'#f8855c', S:'#ffc0a0',
+    T:'#34c77b', F:'#7de8b0',
+    J:'#f8d45c', P:'#ffe9a0',
+  };
+
+  // ── 동그라미 버튼 생성 ──
+  const circlesWrap = document.getElementById('circles-wrap');
+  const circleBtns = [];
+  VALS.forEach((val, idx) => {
+    if (idx > 0) {
+      const sp = document.createElement('div');
+      sp.style.width = GAPS[idx] + 'px';
+      circlesWrap.appendChild(sp);
+    }
+    const btn = document.createElement('button');
+    btn.className = 'circle-btn';
+    btn.style.width  = SIZES[idx] + 'px';
+    btn.style.height = SIZES[idx] + 'px';
+    btn.style.borderColor = COLORS[idx];
+    btn.dataset.val = val;
+    btn.onclick = () => selectAnswer(val, idx);
+    circlesWrap.appendChild(btn);
+    circleBtns.push(btn);
+  });
+
+  // ── 화면 전환 ──
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const el = document.getElementById(id);
+    el.classList.add('active');
+    el.classList.remove('fade-in');
+    void el.offsetWidth;
+    el.classList.add('fade-in');
+  }
+
+  // ── 1. 이름 입력 ──
+  function onNameInput() {
+    document.getElementById('btn-start').disabled =
+      document.getElementById('name-input').value.trim().length === 0;
+  }
+  function startQuiz() {
+    userName = document.getElementById('name-input').value.trim();
+    if (!userName) return;
+    answers.fill(null);
+    current = 0;
+    renderQuestion();
+    showView('quiz-view');
+  }
+
+  // ── 2. 퀴즈 ──
+  function renderQuestion() {
+    const qEl = document.getElementById('q-text');
+    qEl.classList.remove('fade-in');
+    void qEl.offsetWidth;
+    qEl.classList.add('fade-in');
+    qEl.textContent = `Q${current + 1}. ${QUESTIONS[current]}`;
+
+    document.getElementById('q-counter').textContent = `${current + 1} / ${TOTAL}`;
+    const pct = Math.round(current / TOTAL * 100);
+    document.getElementById('q-pct-label').textContent = pct + '%';
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('btn-back').disabled = current === 0;
+
+    // 마지막 문항이고 이미 답변된 경우 결과보기 버튼 유지
+    const isLastAnswered = (current === TOTAL - 1 && answers[current] !== null);
+    document.getElementById('btn-result').style.display = isLastAnswered ? 'block' : 'none';
+
+    const saved = answers[current];
+    circleBtns.forEach((btn, idx) => {
+      const isSelected = (saved !== null && Number(btn.dataset.val) === saved);
+      btn.classList.toggle('selected', isSelected);
+      btn.style.background = isSelected ? COLORS[idx] : '#fff';
+    });
+  }
+
+  function selectAnswer(val, idx) {
+    answers[current] = val;
+    circleBtns.forEach((btn, i) => {
+      const sel = (i === idx);
+      btn.classList.toggle('selected', sel);
+      btn.style.background = sel ? COLORS[i] : '#fff';
+    });
+
+    setTimeout(() => {
+      if (current < TOTAL - 1) {
+        current++;
+        renderQuestion();
+      } else {
+        document.getElementById('progress-fill').style.width = '100%';
+        document.getElementById('q-pct-label').textContent = '100%';
+        document.getElementById('btn-result').style.display = 'block';
+      }
+    }, 180);
+  }
+
+  function goBack() {
+    if (current > 0) { current--; renderQuestion(); }
+  }
+
+  function restartQuiz() {
+    answers.fill(null);
+    current = 0;
+    lastResult = null;
+    document.getElementById('name-input').value = '';
+    document.getElementById('btn-start').disabled = true;
+    showView('name-view');
+  }
+
+  // ── 3. 결과 ──
+  async function submitQuiz() {
+    showView('result-view');
+    document.getElementById('result-content').innerHTML =
+      '<div class="loading-msg">분석 중...</div>';
+
+    // null 답변은 0(보통)으로 대체
+    const safeAnswers = answers.map(a => a === null ? 0 : a);
+
+    const res  = await fetch('/submit', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ name: userName, answers: safeAnswers }),
+    });
+    lastResult = await res.json();
+    renderResult(lastResult);
+  }
+
+  function renderResult(data) {
+    const { mbti, axis_pct, social_scores } = data;
+    const axes = [['E','I'],['N','S'],['T','F'],['J','P']];
+
+    const axisHTML = axes.map(([a, b]) => {
+      const pA = axis_pct[a];
+      const dominant = pA >= 50 ? a : b;
+      return `<div class="axis-row">
+        <span class="axis-letter" style="color:${AXIS_COLORS[a]}">${a}</span>
+        <div class="axis-track">
+          <div class="axis-fill" style="width:${pA.toFixed(1)}%;background:${AXIS_COLORS[dominant]}"></div>
+        </div>
+        <span class="axis-letter" style="color:${AXIS_COLORS[b]}">${b}</span>
+        <span class="axis-pct">${pA.toFixed(0)}%</span>
+      </div>`;
+    }).join('');
+
+    document.getElementById('result-content').innerHTML = `
+      <div class="fade-in">
+        <div class="result-name">${userName}님의 결과</div>
+        <div class="mbti-badge"><div class="mbti-type">${mbti}</div></div>
+
+        <div class="section-label">성향</div>
+        <div style="margin-bottom:24px">${axisHTML}</div>
+
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.12);margin:0 0 24px;">
+
+        <div class="section-label">사회적 능력치</div>
+        <div style="position:relative;width:100%;max-width:320px;margin:0 auto 8px;">
+          <canvas id="radar-chart"></canvas>
+        </div>
+
+        <div class="result-actions">
+          <button class="btn-secondary" onclick="loadCompare()">성향 비교 보기</button>
+          <button class="btn-primary" onclick="loadTeam()">팀 추천 보기 →</button>
+        </div>
+        <div style="margin-top:12px">
+          <button class="btn-purpose-main" onclick="loadPurpose()">🎯 목적별 팀원 추천</button>
+        </div>
+        <div style="text-align:center;margin-top:12px">
+          <button class="btn-ghost" onclick="restartQuiz()">↺ 테스트 다시하기</button>
+        </div>
+      </div>`;
+
+    // 레이더 차트 렌더링
+    const radarCtx = document.getElementById('radar-chart').getContext('2d');
+    const chartColors = SOCIAL_DEF.map(d => d.color);
+    new Chart(radarCtx, {
+      type: 'radar',
+      data: {
+        labels: social_scores.map(s => s.title),
+        datasets: [{
+          data: social_scores.map(s => s.score),
+          backgroundColor: 'rgba(92,110,248,0.10)',
+          borderColor: '#c0c8f8',
+          borderWidth: 1.5,
+          pointBackgroundColor: chartColors,
+          pointBorderColor: chartColors,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+        }],
+      },
+      options: {
+        scales: {
+          r: {
+            min: 0,
+            max: 10,
+            ticks: { display: false },
+            pointLabels: {
+              font: { size: 13, weight: '600' },
+              color: chartColors,
+            },
+          },
+        },
+        plugins: { legend: { display: false } },
+      },
+    });
+  }
+
+  // ── 4. 파티 추천 ──
+  const PARTY_LIMIT = 3;
+  let partyAllCandidates = [];   // 전체 후보
+  let partyAiNames = new Set();  // AI 추천 멤버 이름
+  let partySelected = new Set(); // 현재 선택된 멤버 이름
+
+  const SOCIAL_DEF = [
+    { title: '통찰력', t: ['S','T'], color: '#5c6ef8' },
+    { title: '감수성', t: ['N','I'], color: '#f87171' },
+    { title: '유대감', t: ['F','J'], color: '#fb923c' },
+    { title: '친화력', t: ['P','E'], color: '#34c77b' },
+    { title: '열정',   t: ['N','E'], color: '#f59e0b' },
+    { title: '책임감', t: ['S','J'], color: '#a78bfa' },
+  ];
+  function calcPartyAvg(members) {
+    const avg = {};
+    ['E','I','N','S','T','F','J','P'].forEach(ax => {
+      avg[ax] = members.reduce((s, m) => s + (m.axis_pct[ax] || 0), 0) / members.length;
+    });
+    return SOCIAL_DEF.map(a => ({
+      title: a.title, color: a.color,
+      score: Math.min(10, Math.max(1, +((avg[a.t[0]] + avg[a.t[1]]) / 20).toFixed(1))),
+    }));
+  }
+
+  async function loadTeam() {
+    showView('team-view');
+    partySelected.clear();
+    partyAiNames.clear();
+    partyAllCandidates = [];
+    document.getElementById('team-content').innerHTML = '<div class="loading-msg">AI 분석 중...</div>';
+
+    const [recRes, candRes] = await Promise.all([
+      fetch('/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: userName, mbti: lastResult.mbti, axis_pct: lastResult.axis_pct }),
+      }),
+      fetch('/candidates?name=' + encodeURIComponent(userName)),
+    ]);
+    const recData  = await recRes.json();
+    const candData = await candRes.json();
+
+    partyAllCandidates = candData.candidates;
+
+    if (recData.error) {
+      document.getElementById('team-content').innerHTML = `
+        <div class="fade-in">
+          <div class="error-msg">${recData.error}</div>
+          <button class="btn-ghost team-back" onclick="showView('result-view')">← 결과로 돌아가기</button>
+        </div>`;
+      return;
+    }
+
+    // TOP 1 멤버 사전 선택
+    recData.teams[0].members.forEach(m => {
+      partyAiNames.add(m.name);
+      partySelected.add(m.name);
+    });
+
+    renderParty();
+  }
+
+  function renderParty() {
+    const slots = Array.from({ length: PARTY_LIMIT }, (_, i) => {
+      const name = [...partySelected][i];
+      if (!name) return `<div class="party-slot">빈 슬롯</div>`;
+      const c = partyAllCandidates.find(x => x.name === name);
+      return `<div class="party-slot filled" onclick="toggleParty('${name.replace(/'/g,"\\'")}')">
+        <div class="slot-name">${name}</div>
+        <div class="slot-mbti">${c ? c.mbti : ''}</div>
+        <div class="slot-remove">✕ 빼기</div>
+      </div>`;
+    }).join('');
+
+    const atLimit = partySelected.size >= PARTY_LIMIT;
+
+    const gridHTML = partyAllCandidates.map(c => {
+      const sel   = partySelected.has(c.name);
+      const isAi  = partyAiNames.has(c.name);
+      const disabled = !sel && atLimit;
+      return `<div class="candidate-card ${sel ? 'selected' : ''} ${isAi && !sel ? 'ai-pick' : ''}"
+           style="${disabled ? 'opacity:.4;cursor:default' : ''}"
+           onclick="${disabled ? '' : `toggleParty('${c.name.replace(/'/g,"\\'")}')` }">
+        <div class="c-name">${c.name}</div>
+        <div class="c-mbti">${c.mbti}</div>
+        ${isAi ? '<div class="c-ai">AI 추천</div>' : ''}
+      </div>`;
+    }).join('');
+
+    // 능력치 바
+    const self = { axis_pct: lastResult.axis_pct };
+    const selMembers = partyAllCandidates.filter(c => partySelected.has(c.name));
+    const scores = calcPartyAvg([self, ...selMembers]);
+    const barsHTML = scores.map(s => `
+      <div class="avg-row">
+        <span class="avg-name">${s.title}</span>
+        <div class="avg-track"><div class="avg-fill" style="width:${s.score/10*100}%;background:${s.color}"></div></div>
+        <span class="avg-val">${s.score}</span>
+      </div>`).join('');
+
+    document.getElementById('team-content').innerHTML = `
+      <div class="fade-in">
+        <div class="team-header">
+          <div class="team-title">파티 구성</div>
+          <div class="team-sub">${userName}님 포함 최대 ${PARTY_LIMIT + 1}명</div>
+        </div>
+
+        <div class="section-label" style="margin-bottom:10px">파티 슬롯 (${partySelected.size}/${PARTY_LIMIT})</div>
+        <div class="party-slots">${slots}</div>
+
+        <div class="section-label" style="margin-bottom:10px">후보 목록</div>
+        <div class="candidate-grid">${gridHTML}</div>
+
+        <div class="section-label" style="margin-bottom:10px">파티 능력치 평균</div>
+        <div style="margin-bottom:20px">${barsHTML}</div>
+
+        <button class="btn-ghost team-back" onclick="showView('result-view')">← 결과로 돌아가기</button>
+      </div>`;
+  }
+
+  function toggleParty(name) {
+    if (partySelected.has(name)) {
+      partySelected.delete(name);
+    } else {
+      if (partySelected.size >= PARTY_LIMIT) return;
+      partySelected.add(name);
+    }
+    renderParty();
+  }
+
+  // ── 5. 성향 비교 ──
+  async function loadCompare() {
+    showView('compare-view');
+    document.getElementById('compare-content').innerHTML = '<div class="loading-msg">분석 중...</div>';
+
+    const res  = await fetch('/candidates?name=' + encodeURIComponent(userName));
+    const data = await res.json();
+    renderCompare(data.candidates);
+  }
+
+  function renderCompare(candidates) {
+    if (!candidates.length) {
+      document.getElementById('compare-content').innerHTML =
+        '<div class="error-msg">비교할 후보가 없습니다.</div>';
+      return;
+    }
+
+    // 유사도 점수: 4개 축(E,N,T,J) 퍼센트 차이 합계 (낮을수록 유사)
+    const myPct = lastResult.axis_pct;
+    const AXES  = [['E','I'], ['N','S'], ['T','F'], ['J','P']];
+
+    const scored = candidates.map(c => {
+      const diff = AXES.reduce((sum, [a]) =>
+        sum + Math.abs((myPct[a] || 0) - (c.axis_pct[a] || 0)), 0);
+      return { ...c, diff };
+    }).sort((a, b) => a.diff - b.diff);
+
+    const similar  = scored.slice(0, 3);
+    const opposite = scored.slice(-3).reverse();
+
+    function axisRowsHTML(c, type) {
+      const color = type === 'sim' ? '#5c6ef8' : '#f06040';
+      return AXES.map(([a, b]) => {
+        const myVal   = myPct[a] || 0;
+        const themVal = c.axis_pct[a] || 0;
+        return `<div class="compare-axis-row">
+          <span class="compare-axis-lbl">${a}/${b}</span>
+          <div class="compare-axis-track">
+            <div class="compare-axis-me"   style="width:${myVal.toFixed(1)}%"></div>
+            <div class="compare-axis-them" style="width:${themVal.toFixed(1)}%;background:${color};opacity:.75"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function personHTML(c, type) {
+      const isSim   = type === 'sim';
+      const maxDiff = AXES.length * 100;
+      const pct     = isSim
+        ? Math.round((1 - c.diff / maxDiff) * 100)
+        : Math.round(c.diff / maxDiff * 100);
+      return `<div class="compare-person ${isSim ? 'similar-card' : 'opposite-card'}">
+        <div class="compare-person-header">
+          <div>
+            <div class="compare-person-name">${c.name}</div>
+            <div class="compare-person-mbti ${isSim ? '' : 'opp'}">${c.mbti}</div>
+          </div>
+          <div class="compare-score-badge ${isSim ? 'sim' : 'opp'}">${isSim ? '유사' : '상반'} ${pct}%</div>
+        </div>
+        ${axisRowsHTML(c, type)}
+      </div>`;
+    }
+
+    const legendHTML = `
+      <div style="display:flex;gap:16px;margin-bottom:16px;font-size:12px;color:#888;">
+        <span><span style="display:inline-block;width:14px;height:10px;border-radius:3px;background:rgba(92,110,248,0.5);vertical-align:middle;margin-right:4px"></span>나</span>
+        <span><span style="display:inline-block;width:14px;height:10px;border-radius:3px;background:#5c6ef8;opacity:.75;vertical-align:middle;margin-right:4px"></span>상대방 (유사)</span>
+        <span><span style="display:inline-block;width:14px;height:10px;border-radius:3px;background:#f06040;opacity:.75;vertical-align:middle;margin-right:4px"></span>상대방 (상반)</span>
+      </div>`;
+
+    document.getElementById('compare-content').innerHTML = `
+      <div class="fade-in">
+        <div class="team-header">
+          <div class="team-title">성향 비교</div>
+          <div class="team-sub">${userName}님 (${lastResult.mbti}) 기준</div>
+        </div>
+        ${legendHTML}
+        <div class="compare-section">
+          <div class="compare-section-title similar">가장 비슷한 사람</div>
+          ${similar.map(c => personHTML(c, 'sim')).join('')}
+        </div>
+        <div class="compare-section">
+          <div class="compare-section-title opposite">가장 상반되는 사람</div>
+          ${opposite.map(c => personHTML(c, 'opp')).join('')}
+        </div>
+        <button class="btn-ghost" style="margin-top:8px" onclick="showView('result-view')">← 결과로 돌아가기</button>
+      </div>`;
+  }
+
+  // ── 6. 목적별 추천 ──
+  const PURPOSES = [
+    {
+      icon: '💡',
+      name: '아이디어 발굴',
+      desc: '새로운 아이디어와 창의적 발상이 필요한 팀',
+      abilities: ['감수성', '열정'],
+      colors: ['#f87171', '#f59e0b'],
+    },
+    {
+      icon: '🚀',
+      name: '실행·추진',
+      desc: '빠른 실행력과 에너지가 필요한 팀',
+      abilities: ['열정', '친화력'],
+      colors: ['#f59e0b', '#34c77b'],
+    },
+    {
+      icon: '🔍',
+      name: '전략·분석',
+      desc: '데이터 기반 판단과 깊은 통찰이 필요한 팀',
+      abilities: ['통찰력', '감수성'],
+      colors: ['#5c6ef8', '#f87171'],
+    },
+    {
+      icon: '🤝',
+      name: '팀 화합·문화',
+      desc: '구성원 간 유대와 분위기 조성이 중요한 팀',
+      abilities: ['유대감', '친화력'],
+      colors: ['#fb923c', '#34c77b'],
+    },
+    {
+      icon: '📋',
+      name: '운영·관리',
+      desc: '안정적이고 체계적인 운영이 필요한 팀',
+      abilities: ['책임감', '통찰력'],
+      colors: ['#a78bfa', '#5c6ef8'],
+    },
+    {
+      icon: '🎨',
+      name: '크리에이티브',
+      desc: '감성적 표현과 직관적 기획이 중심인 팀',
+      abilities: ['감수성', '유대감'],
+      colors: ['#f87171', '#fb923c'],
+    },
+  ];
+
+  let purposeCandidates = [];
+  let selectedPurpose = null;
+
+  async function loadPurpose() {
+    showView('purpose-view');
+    document.getElementById('purpose-content').innerHTML = '<div class="loading-msg">불러오는 중...</div>';
+    const res  = await fetch('/candidates?name=' + encodeURIComponent(userName));
+    const data = await res.json();
+    purposeCandidates = data.candidates;
+    renderPurposeList();
+  }
+
+  function renderPurposeList() {
+    const listHTML = PURPOSES.map((p, idx) => `
+      <div class="purpose-card ${selectedPurpose === idx ? 'selected' : ''}" onclick="selectPurpose(${idx})">
+        <div class="purpose-icon">${p.icon}</div>
+        <div class="purpose-info">
+          <div class="purpose-name">${p.name}</div>
+          <div class="purpose-desc">${p.desc}</div>
+          <div class="purpose-tags">
+            ${p.abilities.map((a, i) => `<span class="purpose-tag" style="background:${p.colors[i]}">${a}</span>`).join('')}
+          </div>
+        </div>
+        <div class="purpose-arrow">${selectedPurpose === idx ? '▲' : '▼'}</div>
+      </div>
+      ${selectedPurpose === idx ? purposeResultHTML(p) : ''}
+    `).join('');
+
+    document.getElementById('purpose-content').innerHTML = `
+      <div class="fade-in">
+        <div class="team-header">
+          <div class="team-title">목적별 팀원 추천</div>
+          <div class="team-sub">목적을 선택하면 최적의 팀원을 추천해드려요</div>
+        </div>
+        <div class="purpose-list">${listHTML}</div>
+        <button class="btn-ghost" onclick="showView('result-view')">← 결과로 돌아가기</button>
+      </div>`;
+  }
+
+  function selectPurpose(idx) {
+    selectedPurpose = selectedPurpose === idx ? null : idx;
+    renderPurposeList();
+    if (selectedPurpose !== null) {
+      // 선택된 카드로 스크롤
+      setTimeout(() => {
+        const cards = document.querySelectorAll('.purpose-card');
+        if (cards[idx]) cards[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+  }
+
+  function purposeResultHTML(purpose) {
+    if (!purposeCandidates.length) {
+      return '<div class="purpose-result"><div class="error-msg">비교할 후보가 없습니다.</div></div>';
+    }
+
+    // 두 능력치 합산으로 점수 계산
+    const ranked = purposeCandidates.map(c => {
+      const scores = c.axis_pct;
+      const total = purpose.abilities.reduce((sum, abilityTitle) => {
+        const def = SOCIAL_DEF.find(d => d.title === abilityTitle);
+        const s = def.t.reduce((acc, trait) => acc + (scores[trait] || 0), 0) / 20;
+        return sum + Math.max(1, Math.min(10, Math.round(s * 10) / 10));
+      }, 0);
+      return { ...c, total };
+    }).sort((a, b) => b.total - a.total).slice(0, 3);
+
+    const cardsHTML = ranked.map((c, i) => {
+      const barsHTML = purpose.abilities.map((abilityTitle, ai) => {
+        const def = SOCIAL_DEF.find(d => d.title === abilityTitle);
+        const score = def.t.reduce((acc, trait) => acc + (c.axis_pct[trait] || 0), 0) / 20;
+        const clamped = Math.max(1, Math.min(10, score));
+        return `<div class="purpose-cand-bar-row">
+          <span class="purpose-cand-bar-lbl">${abilityTitle}</span>
+          <div class="purpose-cand-bar-track">
+            <div class="purpose-cand-bar-fill" style="width:${clamped/10*100}%;background:${purpose.colors[ai]}"></div>
+          </div>
+        </div>`;
+      }).join('');
+
+      return `<div class="purpose-cand-card">
+        <div class="purpose-cand-rank ${i === 0 ? 'top' : ''}">${i === 0 ? '①' : i === 1 ? '②' : '③'}</div>
+        <div class="purpose-cand-info">
+          <div class="purpose-cand-name">${c.name}</div>
+          <div class="purpose-cand-mbti">${c.mbti}</div>
+        </div>
+        <div class="purpose-cand-bars">${barsHTML}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="purpose-result">
+      <div class="purpose-result-title">추천 팀원 TOP 3</div>
+      ${cardsHTML}
+    </div>`;
+  }
+
+</script>
+</body>
+</html>

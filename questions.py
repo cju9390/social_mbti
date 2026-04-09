@@ -1,21 +1,10 @@
-import pandas as pd
+"""
+MBTI 질문 목록 (영문 → 한국어 매핑)
+mbti_preprocess_.py 의 부작용(CSV 읽기/쓰기) 없이 질문 데이터만 분리
+"""
 
-try:
-    df = pd.read_csv('16P.csv', encoding='utf-8')
-except UnicodeDecodeError:
-    df = pd.read_csv('16P.csv', encoding='cp1252')
-
-TRAIT_INDICES = {
-    'EI': [1,  6, 11, 16, 21, 26, 31, 36, 41, 46, 51, 56],
-    'NS': [2,  7, 12, 17, 22, 27, 32, 37, 42, 47, 52, 57],
-    'TF': [3,  8, 13, 18, 23, 28, 33, 38, 43, 48, 53, 58],
-    'JP': [4,  9, 14, 19, 24, 29, 34, 39, 44, 49, 54, 59],
-    'AT': [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60],
-}
-
-# 영어 질문 목록
 question_eng = [
-    # EI (외향/내향)
+    # EI
     'You regularly make new friends.',
     'At social events, you rarely try to introduce yourself to new people and mostly talk to the ones you already know',
     'You feel comfortable just walking up to someone you find interesting and striking up a conversation.',
@@ -28,8 +17,7 @@ question_eng = [
     'You rarely contemplate the reasons for human existence or the meaning of life.',
     'You would love a job that requires you to work alone most of the time.',
     'You complete things methodically without skipping over any steps.',
-
-    # NS (직관/감각)
+    # NS
     'You spend a lot of your free time exploring various random topics that pique your interest',
     'You prefer to completely finish one project before starting another.',
     'You are not too interested in discussing various interpretations and analyses of creative works.',
@@ -42,8 +30,7 @@ question_eng = [
     'Your emotions control you more than you control them.',
     'You believe that pondering abstract philosophical questions is a waste of time.',
     'You are very intrigued by things labeled as controversial.',
-
-    # TF (사고/감정)
+    # TF
     'Seeing other people cry can easily make you feel like you want to cry too',
     'You are very sentimental.',
     'You are more inclined to follow your head than your heart.',
@@ -51,13 +38,12 @@ question_eng = [
     'You think the world would be a better place if people relied more on rationality and less on their feelings.',
     'You lose patience with people who are not as efficient as you.',
     'You find it easy to empathize with a person whose experiences are very different from yours.',
-    'You often have a hard time understanding other peoples feelings.',
+    'You often have a hard time understanding other people\u2019s feelings.',
     'In your social circle, you are often the one who contacts your friends and initiates activities.',
     'You take great care not to make people look bad, even when it is completely their fault.',
     'You feel more drawn to places with busy, bustling atmospheres than quiet, intimate places.',
     'You would pass along a good opportunity if you thought someone else needed it more.',
-
-    # JP (판단/인식)
+    # JP
     'You often make a backup plan for a backup plan.',
     'You like to use organizing tools like schedules and lists.',
     'You usually prefer just doing what you feel like at any given moment instead of planning a particular daily routine.',
@@ -72,9 +58,8 @@ question_eng = [
     'You struggle with deadlines.',
 ]
 
-# 한국어 번역 목록 (question_eng 와 순서 일치)
 question_kor = [
-    # EI (외향/내향)
+    # EI
     '일상 속에서, 나는 정기적으로 새로운 친구를 사귄다.',
     '처음 보는 사람들이 많은 모임에서, 나는 아는 사람과만 주로 이야기한다.',
     '흥미로운 사람을 마주쳤을 때, 나는 먼저 다가가 대화를 거는 것이 편하다.',
@@ -87,8 +72,7 @@ question_kor = [
     '평소에, 나는 인간 존재의 이유나 삶의 의미에 대해 깊이 생각하는 편이 아니다.',
     '미래 진로를 상상할 때, 나는 대부분 혼자 일하는 직업을 원한다.',
     '복잡한 일을 처리할 때, 나는 단계를 건너뛰지 않고 체계적으로 완료한다.',
-
-    # NS (직관/감각)
+    # NS
     '특별한 계획이 없는 날, 나는 다양한 주제를 탐색하는 데 많은 시간을 쓴다.',
     '여러 프로젝트가 쌓여 있을 때, 나는 새것을 시작하기 전에 현재 것을 완전히 끝내는 것을 선호한다.',
     '영화나 책을 함께 본 후 대화할 때, 나는 다양한 해석을 논의하는 데 별로 관심이 없다.',
@@ -101,8 +85,7 @@ question_kor = [
     '일상에서, 나는 감정을 스스로 다스리기보다 감정에 이끌리는 편이다.',
     '철학적인 주제가 화제에 오르면, 나는 그런 질문을 고민하는 것은 시간 낭비라고 생각한다.',
     '사회적으로 논란이 되는 사안을 접했을 때, 나는 매우 흥미를 느낀다.',
-
-    # TF (사고/감정)
+    # TF
     '슬픈 장면이나 이야기를 접했을 때, 나는 다른 사람이 우는 것을 보면 쉽게 눈물이 난다.',
     '스스로를 표현한다면, 나는 매우 감성적인 편이다.',
     '갈등 상황에 놓였을 때, 나는 감정보다 이성에 따르는 편이다.',
@@ -115,8 +98,7 @@ question_kor = [
     '누군가와 다툰 후 상황을 정리할 때, 나는 완전히 상대방 잘못이더라도 상대를 나쁘게 보이지 않으려 조심한다.',
     '어떤 공간에서 더 편안함을 느끼냐고 묻는다면, 나는 조용한 곳보다 활기차고 북적이는 분위기에 더 끌린다.',
     '좋은 기회가 생겼을 때, 다른 사람이 더 필요하다고 생각되면 나는 그 기회를 양보할 것이다.',
-
-    # JP (판단/인식)
+    # JP
     '중요한 일을 앞두고 있을 때, 나는 대비책의 대비책까지 자주 만든다.',
     '일상을 관리할 때, 나는 일정표나 할 일 목록 같은 정리 도구를 즐겨 사용한다.',
     '하루 일과를 보낼 때, 나는 정해진 루틴보다 그 순간의 기분대로 행동하는 것을 선호한다.',
@@ -131,11 +113,4 @@ question_kor = [
     '기한이 있는 과제나 업무를 처리할 때, 나는 마감 기한을 지키는 것이 힘들다.',
 ]
 
-_question_map = dict(zip(question_eng, question_kor))
-
-# 영어 질문 컬럼명 → 한국어로 대체 후 엑셀 저장
-rename_kor = {col: _question_map.get(col, col) for col in df.columns}
-df_kor = df.rename(columns=rename_kor)
-df_kor.to_csv('social_mbti_preprocess.csv', index=False, encoding='utf-8-sig')
-
-print(f"social_mbti_preprocess.csv 저장 완료: {df_kor.shape}")
+question_map = dict(zip(question_eng, question_kor))
