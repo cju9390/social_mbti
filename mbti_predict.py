@@ -32,7 +32,6 @@ display_traits = [TRAITS[t] for _ in range(N_PER) for t in range(N_TRAITS)]
 display_names  = [col_names[i] for i in display_order]
 
 # 16개 클래스에서 각 축별 그룹 인덱스
-# 예) E 타입: 클래스명 첫 글자가 'E'인 것들의 인덱스
 AXIS_GROUPS = {
     'E': [i for i, c in enumerate(le.classes_) if c[0] == 'E'],
     'I': [i for i, c in enumerate(le.classes_) if c[0] == 'I'],
@@ -136,10 +135,6 @@ def print_social_scores(result: dict):
         filled  = round(item['score'] / 10 * bar_len)
         bar     = '█' * filled + '░' * (bar_len - filled)
         print(f"  {item['title']:<8}  [{bar}]  {item['score']:4.1f}")
-
-
-
-
 
 
 # ─────────────────────────────────────────────

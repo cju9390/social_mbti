@@ -131,11 +131,7 @@ question_kor = [
     '기한이 있는 과제나 업무를 처리할 때, 나는 마감 기한을 지키는 것이 힘들다.',
 ]
 
-_question_map = dict(zip(question_eng, question_kor))
+# 영어 컬럼명 그대로 저장 (한국어 변환은 app에서 question_map으로 처리)
+df.to_csv('social_mbti_preprocess.csv', index=False, encoding='utf-8-sig')
 
-# 영어 질문 컬럼명 → 한국어로 대체 후 엑셀 저장
-rename_kor = {col: _question_map.get(col, col) for col in df.columns}
-df_kor = df.rename(columns=rename_kor)
-df_kor.to_csv('social_mbti_preprocess.csv', index=False, encoding='utf-8-sig')
-
-print(f"social_mbti_preprocess.csv 저장 완료: {df_kor.shape}")
+print(f"social_mbti_preprocess.csv 저장 완료: {df.shape}")

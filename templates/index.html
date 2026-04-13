@@ -648,6 +648,16 @@
   let current  = 0;
   let lastResult = null; // {mbti, axis_pct, social_scores}
 
+  // XSS 방지용 이스케이프
+  function esc(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   // ── 동그라미 설정 ──
   // 값: -3 -2 -1  0  1  2  3
   const SIZES  = [72, 56, 42, 28, 42, 56, 72];
@@ -775,13 +785,20 @@
     // null 답변은 0(보통)으로 대체
     const safeAnswers = answers.map(a => a === null ? 0 : a);
 
-    const res  = await fetch('/submit', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ name: userName, answers: safeAnswers }),
-    });
-    lastResult = await res.json();
-    renderResult(lastResult);
+    try {
+      const res  = await fetch('/submit', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ name: userName, answers: safeAnswers }),
+      });
+      if (!res.ok) throw new Error(`서버 오류 (${res.status})`);
+      lastResult = await res.json();
+      renderResult(lastResult);
+    } catch (e) {
+      document.getElementById('result-content').innerHTML =
+        `<div class="error-msg">오류가 발생했습니다: ${esc(e.message)}</div>
+         <button class="btn-ghost" style="margin-top:16px" onclick="showView('quiz-view')">← 다시 시도</button>`;
+    }
   }
 
   function renderResult(data) {
@@ -803,7 +820,7 @@
 
     document.getElementById('result-content').innerHTML = `
       <div class="fade-in">
-        <div class="result-name">${userName}님의 결과</div>
+        <div class="result-name">${esc(userName)}님의 결과</div>
         <div class="mbti-badge"><div class="mbti-type">${mbti}</div></div>
 
         <div class="section-label">성향</div>
@@ -895,33 +912,45 @@
     partyAllCandidates = [];
     document.getElementById('team-content').innerHTML = '<div class="loading-msg">AI 분석 중...</div>';
 
-    const [recRes, candRes] = await Promise.all([
-      fetch('/recommend', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: userName, mbti: lastResult.mbti, axis_pct: lastResult.axis_pct }),
-      }),
-      fetch('/candidates?name=' + encodeURIComponent(userName)),
-    ]);
-    const recData  = await recRes.json();
-    const candData = await candRes.json();
+    try {
+      const [recRes, candRes] = await Promise.all([
+        fetch('/recommend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: userName, mbti: lastResult.mbti, axis_pct: lastResult.axis_pct }),
+        }),
+        fetch('/candidates?name=' + encodeURIComponent(userName)),
+      ]);
+      if (!recRes.ok || !candRes.ok) throw new Error('서버 오류');
+      const recData  = await recRes.json();
+      const candData = await candRes.json();
 
-    partyAllCandidates = candData.candidates;
+      partyAllCandidates = candData.candidates;
 
-    if (recData.error) {
+      if (recData.error) {
+        document.getElementById('team-content').innerHTML = `
+          <div class="fade-in">
+            <div class="error-msg">${esc(recData.error)}</div>
+            <button class="btn-ghost team-back" onclick="showView('result-view')">← 결과로 돌아가기</button>
+          </div>`;
+        return;
+      }
+
+      // TOP 1 멤버 사전 선택
+      if (recData.teams && recData.teams.length > 0) {
+        recData.teams[0].members.forEach(m => {
+          partyAiNames.add(m.name);
+          partySelected.add(m.name);
+        });
+      }
+    } catch (e) {
       document.getElementById('team-content').innerHTML = `
         <div class="fade-in">
-          <div class="error-msg">${recData.error}</div>
+          <div class="error-msg">오류가 발생했습니다: ${esc(e.message)}</div>
           <button class="btn-ghost team-back" onclick="showView('result-view')">← 결과로 돌아가기</button>
         </div>`;
       return;
     }
-
-    // TOP 1 멤버 사전 선택
-    recData.teams[0].members.forEach(m => {
-      partyAiNames.add(m.name);
-      partySelected.add(m.name);
-    });
 
     renderParty();
   }
@@ -968,7 +997,7 @@
       <div class="fade-in">
         <div class="team-header">
           <div class="team-title">파티 구성</div>
-          <div class="team-sub">${userName}님 포함 최대 ${PARTY_LIMIT + 1}명</div>
+          <div class="team-sub">${esc(userName)}님 포함 최대 ${PARTY_LIMIT + 1}명</div>
         </div>
 
         <div class="section-label" style="margin-bottom:10px">파티 슬롯 (${partySelected.size}/${PARTY_LIMIT})</div>
@@ -1022,7 +1051,8 @@
     }).sort((a, b) => a.diff - b.diff);
 
     const similar  = scored.slice(0, 3);
-    const opposite = scored.slice(-3).reverse();
+    const similarNames = new Set(similar.map(c => c.name));
+    const opposite = scored.filter(c => !similarNames.has(c.name)).slice(-3).reverse();
 
     function axisRowsHTML(c, type) {
       const color = type === 'sim' ? '#5c6ef8' : '#f06040';
@@ -1068,7 +1098,7 @@
       <div class="fade-in">
         <div class="team-header">
           <div class="team-title">성향 비교</div>
-          <div class="team-sub">${userName}님 (${lastResult.mbti}) 기준</div>
+          <div class="team-sub">${esc(userName)}님 (${lastResult.mbti}) 기준</div>
         </div>
         ${legendHTML}
         <div class="compare-section">
