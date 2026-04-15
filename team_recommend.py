@@ -32,6 +32,42 @@ def team_score_stats(member_vectors: list[np.ndarray]) -> dict:
     }
 
 
+def build_reason(
+    seed_vec: np.ndarray,
+    member_vecs: list[np.ndarray],
+    members: list[dict],
+    stats: dict,
+    ability_titles: list[str],
+) -> str:
+    """팀 강점 요약 문장 생성"""
+    avg = stats['avg']
+
+    # 팀 전체 강점 상위 2개
+    top_idx = avg.argsort()[::-1][:2]
+    strengths = [f"{ability_titles[i]}({avg[i]:.1f})" for i in top_idx]
+
+    # seed 약점 → 가장 잘 보완하는 팀원
+    weak_idx = int(seed_vec.argmin())
+    weak_title = ability_titles[weak_idx]
+    best_cover = max(members, key=lambda m: m['scores'][weak_idx]['score'])
+    cover_score = best_cover['scores'][weak_idx]['score']
+
+    # 균형 평가
+    if stats['min'] >= 7.0:
+        balance = "모든 능력치 7점 이상의 균형 잡힌 팀"
+    elif stats['min'] >= 5.5:
+        balance = f"전반적으로 고른 팀 (최저 {stats['min']:.1f}점)"
+    else:
+        low_title = ability_titles[int(avg.argmin())]
+        balance = f"{low_title}이 다소 낮으나 다른 강점으로 보완"
+
+    return (
+        f"이 팀은 {' · '.join(strengths)}이 강점입니다. "
+        f"당신의 약점인 {weak_title}은 {best_cover['name']}({best_cover['mbti']}, {cover_score:.1f}점)이 보완합니다. "
+        f"{balance}입니다."
+    )
+
+
 def recommend_team(
     seed_result: dict,
     candidates: list[dict],
@@ -83,6 +119,7 @@ def recommend_team(
     output = []
     for combo, stats in results[:top_k]:
         members = []
+        member_vecs_combo = []
         for i in combo:
             c = candidates[i]
             scores = calc_social_scores(c['result'])
@@ -91,12 +128,15 @@ def recommend_team(
                 'mbti':   c['result']['mbti'],
                 'scores': scores,
             })
+            member_vecs_combo.append(cand_vecs[i])
+        reason = build_reason(seed_vec, member_vecs_combo, members, stats, ability_titles)
         output.append({
-            'members':    members,
-            'team_avg':   stats['avg'],
-            'team_min':   stats['min'],
-            'team_total': stats['total'],
+            'members':        members,
+            'team_avg':       stats['avg'],
+            'team_min':       stats['min'],
+            'team_total':     stats['total'],
             'ability_titles': ability_titles,
+            'reason':         reason,
         })
 
     return output

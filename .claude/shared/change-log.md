@@ -40,3 +40,15 @@
 | 2026-04-15 10:57:39 | `Write` | `c:\dev\workspace_python\social_mbti\mbti_preprocess_.py` | `""" 16P.csv → social_mbti_preprocess.csv EI/NS/TF/JP 질문 컬럼명을 한�...` |
 | 2026-04-15 10:58:07 | `Edit` | `c:\dev\workspace_python\social_mbti\app.py` | `from mbti_predict import predict_mbti, calc_social_scores, display_names from ca...` |
 | 2026-04-15 11:04:22 | `Write` | `c:\dev\workspace_python\social_mbti\mbti_svm_train.py` | `""" XGBoost 모델 학습 및 저장 — 4개 독립 이진 분류기 - Optuna �...` |
+| 2026-04-15 14:07:11 | `Edit` | `c:\dev\workspace_python\social_mbti\app.py` | `import sys import logging import traceback ...` |
+| 2026-04-15 14:07:15 | `Edit` | `c:\dev\workspace_python\social_mbti\app.py` | `import sys import logging from flask import Flask, render_template, request, jso...` |
+| 2026-04-15 14:07:22 | `Edit` | `c:\dev\workspace_python\social_mbti\app.py` | `    try:         result = predict_mbti(answers)         scores = calc_social_sco...` |
+| 2026-04-15 14:08:46 | `Edit` | `c:\dev\workspace_python\social_mbti\mbti_predict.py` | `        p_pos = float(proba[1]) * 100   # P(E), P(N), P(T), P(J)         p_neg =...` |
+| 2026-04-15 14:25:58 | `Edit` | `c:\dev\workspace_python\social_mbti\team_recommend.py` | `def build_reason(     seed_vec: np.ndarray,     member_vecs: list[np.ndarray], ...` |
+| 2026-04-15 14:26:05 | `Edit` | `c:\dev\workspace_python\social_mbti\team_recommend.py` | `    # 상위 top_k 조합 정리     output = []     for combo, stats in results...` |
+| 2026-04-15 14:26:14 | `Edit` | `c:\dev\workspace_python\social_mbti\app.py` | `        output.append({             'members':        t['members'],             ...` |
+| 2026-04-15 14:26:21 | `Edit` | `c:\dev\workspace_python\social_mbti\templates\index.html` | `    .team-back {       margin-top: 8px;     } ...` |
+| 2026-04-15 14:26:31 | `Edit` | `c:\dev\workspace_python\social_mbti\templates\index.html` | `  let partyAllCandidates = [];   // 전체 후보   let partyAiNames = new Set()...` |
+| 2026-04-15 14:26:36 | `Edit` | `c:\dev\workspace_python\social_mbti\templates\index.html` | `    showView('team-view');     partySelected.clear();     partyAiNames.clear(); ...` |
+| 2026-04-15 14:26:41 | `Edit` | `c:\dev\workspace_python\social_mbti\templates\index.html` | `      // TOP 1 멤버 사전 선택       if (recData.teams && recData.teams.len...` |
+| 2026-04-15 14:26:47 | `Edit` | `c:\dev\workspace_python\social_mbti\templates\index.html` | `        ${partyAiReason ? `         <div class="team-reason">           <div cla...` |

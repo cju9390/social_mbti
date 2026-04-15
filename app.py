@@ -89,6 +89,7 @@ def recommend():
             'team_total':     float(t['team_total']),
             'team_avg':       t['team_avg'].tolist(),
             'ability_titles': t['ability_titles'],
+            'reason':         t['reason'],
         })
     return jsonify({'teams': output})
 
