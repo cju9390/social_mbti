@@ -1,3 +1,8 @@
+"""
+16P.csv → social_mbti_preprocess.csv
+EI/NS/TF/JP 질문 컬럼명을 한국어로 변환하여 저장
+(AT 컬럼은 학습에 미사용이므로 원문 유지)
+"""
 import pandas as pd
 
 try:
@@ -10,69 +15,8 @@ TRAIT_INDICES = {
     'NS': [2,  7, 12, 17, 22, 27, 32, 37, 42, 47, 52, 57],
     'TF': [3,  8, 13, 18, 23, 28, 33, 38, 43, 48, 53, 58],
     'JP': [4,  9, 14, 19, 24, 29, 34, 39, 44, 49, 54, 59],
-    'AT': [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60],
 }
 
-# 영어 질문 목록
-question_eng = [
-    # EI (외향/내향)
-    'You regularly make new friends.',
-    'At social events, you rarely try to introduce yourself to new people and mostly talk to the ones you already know',
-    'You feel comfortable just walking up to someone you find interesting and striking up a conversation.',
-    'You enjoy participating in group activities.',
-    'You avoid leadership roles in group settings.',
-    'You tend to avoid drawing attention to yourself.',
-    'You usually prefer to be around others rather than on your own.',
-    'After a long and exhausting week, a lively social event is just what you need.',
-    'You avoid making phone calls.',
-    'You rarely contemplate the reasons for human existence or the meaning of life.',
-    'You would love a job that requires you to work alone most of the time.',
-    'You complete things methodically without skipping over any steps.',
-
-    # NS (직관/감각)
-    'You spend a lot of your free time exploring various random topics that pique your interest',
-    'You prefer to completely finish one project before starting another.',
-    'You are not too interested in discussing various interpretations and analyses of creative works.',
-    'You like books and movies that make you come up with your own interpretation of the ending.',
-    'You are definitely not an artistic type of person.',
-    'Your mood can change very quickly.',
-    'You become bored or lose interest when the discussion gets highly theoretical.',
-    'You enjoy going to art museums.',
-    'You often spend a lot of time trying to understand views that are very different from your own.',
-    'Your emotions control you more than you control them.',
-    'You believe that pondering abstract philosophical questions is a waste of time.',
-    'You are very intrigued by things labeled as controversial.',
-
-    # TF (사고/감정)
-    'Seeing other people cry can easily make you feel like you want to cry too',
-    'You are very sentimental.',
-    'You are more inclined to follow your head than your heart.',
-    'Your happiness comes more from helping others accomplish things than your own accomplishments.',
-    'You think the world would be a better place if people relied more on rationality and less on their feelings.',
-    'You lose patience with people who are not as efficient as you.',
-    'You find it easy to empathize with a person whose experiences are very different from yours.',
-    'You often have a hard time understanding other peoples feelings.',
-    'In your social circle, you are often the one who contacts your friends and initiates activities.',
-    'You take great care not to make people look bad, even when it is completely their fault.',
-    'You feel more drawn to places with busy, bustling atmospheres than quiet, intimate places.',
-    'You would pass along a good opportunity if you thought someone else needed it more.',
-
-    # JP (판단/인식)
-    'You often make a backup plan for a backup plan.',
-    'You like to use organizing tools like schedules and lists.',
-    'You usually prefer just doing what you feel like at any given moment instead of planning a particular daily routine.',
-    'You are interested in so many things that you find it difficult to choose what to try next.',
-    'You prefer to do your chores before allowing yourself to relax.',
-    'You often end up doing things at the last possible moment.',
-    'You usually postpone finalizing decisions for as long as possible.',
-    'You like to have a to-do list for each day.',
-    'If your plans are interrupted, your top priority is to get back on track as soon as possible.',
-    'Your personal work style is closer to spontaneous bursts of energy than organized and consistent efforts.',
-    'You know at first glance how someone is feeling.',
-    'You struggle with deadlines.',
-]
-
-# 한국어 번역 목록 (question_eng 와 순서 일치)
 question_kor = [
     # EI (외향/내향)
     '일상 속에서, 나는 정기적으로 새로운 친구를 사귄다.',
@@ -131,7 +75,13 @@ question_kor = [
     '기한이 있는 과제나 업무를 처리할 때, 나는 마감 기한을 지키는 것이 힘들다.',
 ]
 
-# 영어 컬럼명 그대로 저장 (한국어 변환은 app에서 question_map으로 처리)
-df.to_csv('social_mbti_preprocess.csv', index=False, encoding='utf-8-sig')
+# EI/NS/TF/JP 컬럼 인덱스 → 한국어명 매핑
+rename_map = {}
+for trait_idx, (trait, positions) in enumerate(TRAIT_INDICES.items()):
+    kor_list = question_kor[trait_idx * 12 : (trait_idx + 1) * 12]
+    for col_pos, kor_name in zip(positions, kor_list):
+        rename_map[df.columns[col_pos]] = kor_name
 
+df = df.rename(columns=rename_map)
+df.to_csv('social_mbti_preprocess.csv', index=False, encoding='utf-8-sig')
 print(f"social_mbti_preprocess.csv 저장 완료: {df.shape}")
