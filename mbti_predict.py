@@ -65,8 +65,8 @@ def predict_mbti(interleaved_answers: list) -> dict:
         pos_label = TRAIT_META[trait]['pos_label']  # E / N / T / J
         neg_label = {'E': 'I', 'N': 'S', 'T': 'F', 'J': 'P'}[pos_label]
 
-        p_pos = proba[1] * 100   # P(E), P(N), P(T), P(J)
-        p_neg = proba[0] * 100   # P(I), P(S), P(F), P(P)
+        p_pos = float(proba[1]) * 100   # P(E), P(N), P(T), P(J)
+        p_neg = float(proba[0]) * 100   # P(I), P(S), P(F), P(P)
 
         axis_pct[pos_label] = round(p_pos, 1)
         axis_pct[neg_label] = round(p_neg, 1)

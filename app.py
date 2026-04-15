@@ -1,10 +1,12 @@
 import sys
+import logging
 from flask import Flask, render_template, request, jsonify
 from mbti_predict import predict_mbti, calc_social_scores, display_names
 from candidate_db import init_db, get_all_candidates, add_candidate_from_result, seed_candidates
 from team_recommend import recommend_team
 
 sys.stdout.reconfigure(encoding='utf-8')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
 
 app = Flask(__name__)
 init_db()
@@ -35,10 +37,13 @@ def submit():
         return jsonify({'error': 'answers는 리스트여야 합니다.'}), 400
     try:
         result = predict_mbti(answers)
+        scores = calc_social_scores(result)
+        add_candidate_from_result(name, result)
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
-    scores = calc_social_scores(result)
-    add_candidate_from_result(name, result)
+    except Exception as e:
+        logging.exception("submit 처리 중 오류 발생")
+        return jsonify({'error': f'예측 오류: {e}'}), 500
     return jsonify({
         'mbti':          result['mbti'],
         'axis_pct':      result['axis_pct'],
