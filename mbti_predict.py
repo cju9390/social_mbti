@@ -65,8 +65,17 @@ def predict_mbti(interleaved_answers: list) -> dict:
         pos_label = TRAIT_META[trait]['pos_label']  # E / N / T / J
         neg_label = {'E': 'I', 'N': 'S', 'T': 'F', 'J': 'P'}[pos_label]
 
-        p_pos = float(proba[1]) * 100   # P(E), P(N), P(T), P(J)
-        p_neg = float(proba[0]) * 100   # P(I), P(S), P(F), P(P)
+        # temperature scaling: 극단 확률값(1%/99%) 완화 (T>1 → 50% 방향으로 압축)
+        # 예측 방향은 바뀌지 않음 (단조변환)
+        TEMP = 2.5
+        raw_pos = float(proba[1])
+        raw_neg = float(proba[0])
+        logit_pos = np.log(raw_pos / (raw_neg + 1e-10))
+        scaled_pos = 1.0 / (1.0 + np.exp(-logit_pos / TEMP))
+        scaled_neg = 1.0 - scaled_pos
+
+        p_pos = scaled_pos * 100   # P(E), P(N), P(T), P(J)
+        p_neg = scaled_neg * 100   # P(I), P(S), P(F), P(P)
 
         axis_pct[pos_label] = round(p_pos, 1)
         axis_pct[neg_label] = round(p_neg, 1)

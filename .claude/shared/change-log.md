@@ -52,3 +52,20 @@
 | 2026-04-15 14:26:36 | `Edit` | `c:\dev\workspace_python\social_mbti\templates\index.html` | `    showView('team-view');     partySelected.clear();     partyAiNames.clear(); ...` |
 | 2026-04-15 14:26:41 | `Edit` | `c:\dev\workspace_python\social_mbti\templates\index.html` | `      // TOP 1 멤버 사전 선택       if (recData.teams && recData.teams.len...` |
 | 2026-04-15 14:26:47 | `Edit` | `c:\dev\workspace_python\social_mbti\templates\index.html` | `        ${partyAiReason ? `         <div class="team-reason">           <div cla...` |
+| 2026-04-15 14:35:48 | `Edit` | `c:\dev\workspace_python\social_mbti\mbti_svm_train.py` | `import random import warnings import pandas as pd ...` |
+| 2026-04-15 14:35:56 | `Edit` | `c:\dev\workspace_python\social_mbti\mbti_svm_train.py` | `    X_tr_full, X_te, y_tr_full, y_te = train_test_split(         X_all, y, test_...` |
+| 2026-04-15 14:36:10 | `Edit` | `c:\dev\workspace_python\social_mbti\mbti_svm_train.py` | `    def objective(trial):         clf = XGBClassifier(             n_estimators ...` |
+| 2026-04-15 14:36:14 | `Edit` | `c:\dev\workspace_python\social_mbti\mbti_svm_train.py` | `    models[trait]     = calibrated ...` |
+| 2026-04-15 14:42:14 | `Edit` | `c:\dev\workspace_python\social_mbti\mbti_svm_train.py` | `import random import warnings import pandas as pd ...` |
+| 2026-04-15 14:42:23 | `Edit` | `c:\dev\workspace_python\social_mbti\mbti_svm_train.py` | `    X_tr, X_te, y_tr, y_te = train_test_split(         X_all, y, test_size=0.2, ...` |
+| 2026-04-15 14:42:29 | `Edit` | `c:\dev\workspace_python\social_mbti\mbti_svm_train.py` | `    clf = XGBClassifier(**best, eval_metric='logloss', random_state=SEED, n_jobs...` |
+| 2026-04-15 14:42:32 | `Edit` | `c:\dev\workspace_python\social_mbti\mbti_svm_train.py` | `    models[trait]     = clf ...` |
+| 2026-04-15 14:42:43 | `Edit` | `c:\dev\workspace_python\social_mbti\mbti_predict.py` | `        # classes_: [0, 1] → proba[0]=P(negative), proba[1]=P(positive)       ...` |
+| 2026-04-15 17:39:56 | `Edit` | `c:\dev\workspace_python\social_mbti\candidate_db.py` | `def get_candidate(name: str) -> dict | None:     """이름으로 단건 조회. ...` |
+| 2026-04-15 17:40:51 | `Edit` | `c:\dev\workspace_python\social_mbti\candidate_db.py` | `def remove_candidate(name: str) -> int: ...` |
+| 2026-04-15 17:40:55 | `Edit` | `c:\dev\workspace_python\social_mbti\candidate_db.py` | `def list_candidates ...` |
+| 2026-04-15 17:42:25 | `Edit` | `c:\dev\workspace_python\social_mbti\candidate_db.py` | `def clear_candidates():     """모든 후보 삭제"""     with _conn() as con: ...` |
+| 2026-04-15 17:44:23 | `Edit` | `c:\dev\workspace_python\social_mbti\candidate_db.py` | `if __name__ == '__main__':     with sqlite3.connect(DB_PATH) as con:         con...` |
+| 2026-04-15 17:45:09 | `Edit` | `c:\dev\workspace_python\social_mbti\candidate_db.py` | `if __name__ == '__main__':     init_db()     clear_candidates() ...` |
+| 2026-04-15 17:46:13 | `Edit` | `c:\dev\workspace_python\social_mbti\candidate_db.py` | `def clear_candidates():     """모든 후보 삭제 + ID 시퀀스 초기화""" ...` |
+| 2026-04-15 17:48:56 | `Edit` | `c:\dev\workspace_python\social_mbti\candidate_db.py` | `        ("테스트11", "ESTJ", {"E": 74, "I": 26, "N": 24, "S": 76, "T": 76, "F...` |
