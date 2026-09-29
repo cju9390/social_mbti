@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 *.db
+.vscode/
+__pycache__/
+*.db
